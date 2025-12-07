@@ -3,6 +3,8 @@
 #include <cstdlib>
 #include <algorithm>
 #include <cmath>
+#include <fstream>
+#include <cstdint>
 
 class Matrix {
 public:    
@@ -263,3 +265,77 @@ public:
 
 
 };
+
+std::vector<int> get_predictions(const Matrix& A2) {
+    // shape (10 x batch_size)
+
+    std::vector<int> result;
+    result.reserve(A2.cols);
+
+    for (int j = 0; j < A2.cols; j++) {
+        float maxi = A2(0, j);
+        int maxi_index = 0;
+
+
+        for (int i = 0; i < A2.rows; i++) {
+            if (A2(i, j) > maxi) {
+                maxi = A2(i, j);
+                maxi_index = i;
+            }
+        }
+
+        result.push_back(maxi_index);
+    }
+
+    return result;
+}
+
+float get_accuracy(const std::vector<int>& predictions, const std::vector<int>& Y) {
+    if (predictions.size() != Y.size()) throw std::invalid_argument("Shape mismatch");
+
+    int count = 0;
+
+    for (int i = 0; i < predictions.size(); i++) {
+        if (predictions[i] == Y[i]) count++;
+    }
+
+    return count / float(predictions.size());
+}
+
+
+constexpr uint32_t swap_endian(uint32_t val) {
+    return ((val & 0xFF000000) >> 24) |
+        ((val & 0x00FF0000) >> 8) |
+        ((val & 0x0000FF00) << 8) |
+        ((val & 0x000000FF) << 24);
+}
+
+std::vector<int> read_mnist_labels(const std::string& full_path) {
+    std::ifstream label_file(full_path, std::ios::binary);
+
+    uint32_t magic;
+    uint32_t num_items;
+
+    label_file.read(reinterpret_cast<char*> (&magic), 4);
+    magic = swap_endian(magic);
+
+    if (magic != 2049) throw std::runtime_error("Invalid label file");
+
+    label_file.read(reinterpret_cast<char*> (&num_items), 4);
+    num_items = swap_endian(num_items);
+
+    std::vector<int> result;
+    result.reserve(num_items);
+
+    for (int i = 0; i < num_items; i++) {
+        uint8_t label;
+        label_file.read(reinterpret_cast<char*>(&label), 1);
+
+        result.push_back(label);
+
+    }
+
+    return result;
+}
+
+
