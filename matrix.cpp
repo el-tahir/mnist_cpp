@@ -338,4 +338,43 @@ std::vector<int> read_mnist_labels(const std::string& full_path) {
     return result;
 }
 
+Matrix read_mnist_images(const std::string& full_path) {
+
+    std::ifstream images_file(full_path, std::ios::binary);
+
+    uint32_t magic;
+    uint32_t num_images;
+    uint32_t rows;
+    uint32_t cols;
+
+    images_file.read(reinterpret_cast<char*> (&magic), 4);
+    magic = swap_endian(magic);
+
+    if (magic != 2051) throw std::runtime_error("invalid images file");
+
+    images_file.read(reinterpret_cast<char*> (& num_images), 4);
+    num_images = swap_endian(num_images);
+
+    images_file.read(reinterpret_cast<char*> (&rows), 4);
+    rows = swap_endian(rows);
+
+    images_file.read(reinterpret_cast<char*> (&cols), 4);
+    cols = swap_endian(cols);
+
+    Matrix images(num_images, rows * cols);
+
+    for (int n = 0; n < num_images; n++) {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                uint8_t pixel;
+                images_file.read(reinterpret_cast<char*> (&pixel), 1);
+                images(n, i * cols + j) = float(pixel) / 255.0f;
+            }
+        }
+    }
+
+    return images;
+    
+}
+
 
