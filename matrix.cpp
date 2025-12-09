@@ -377,4 +377,64 @@ Matrix read_mnist_images(const std::string& full_path) {
     
 }
 
+int main() {
+    Matrix train_images = read_mnist_images("train-images-idx3-ubyte");
+    std::vector<int> train_labels = read_mnist_labels("train-labels-idx1-ubyte");
+
+    Matrix test_images = read_mnist_images("t10k-images-idx3-ubyte");
+    std::vector<int> test_labels = read_mnist_labels("t10k-labels-idx1-ubyte");
+
+
+    NeuralNetwork nn(784, 128, 10);
+
+    int epochs = 20;
+
+    int batch_size = 64;
+
+    int num_samples = train_images.rows;
+    int num_batches = (num_samples + batch_size - 1) / batch_size;
+
+    for (int epoch = 0; epoch < epochs; epoch++) {
+
+        for (int batch = 0; batch < num_batches; batch++) {
+
+            int start = batch * batch_size;
+            int end = std::min(start + batch_size, num_samples);
+            int current_batch_size = end - start;
+
+            Matrix X_batch (current_batch_size, 784);
+
+            for (int i = 0; i < current_batch_size; i++) {
+                for (int j = 0; j < 784; j++) {
+                    X_batch(i, j) = train_images(start + i, j);
+                }
+            }
+
+            std::vector<int> Y_batch;
+            Y_batch.reserve(current_batch_size);
+
+            for (int i = start; i < end; i++) {
+                Y_batch.push_back(train_labels[i]);
+            }
+
+            Matrix X_batch_T = X_batch.T();
+            auto cache =  nn.forward(X_batch_T);
+            nn.backward(X_batch_T, Y_batch, cache);
+
+        }
+
+        auto cache = nn.forward(test_images.T());
+        auto predictions = get_predictions(cache.A2);
+        float acc = get_accuracy(predictions, test_labels);
+
+        std::cout << "Epoch " <<  epoch << " accuracy: " << acc << std::endl;
+
+    }
+
+
+
+
+    return 0;
+}
+
 
