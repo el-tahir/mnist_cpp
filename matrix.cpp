@@ -5,6 +5,7 @@
 #include <cmath>
 #include <fstream>
 #include <cstdint>
+#include <ctime>
 
 class Matrix {
 public:    
@@ -261,7 +262,60 @@ public:
         W2 = W2 - (dW2 * learning_rate);
         b2 = b2 - (db2 * learning_rate);
 
-    } 
+    }
+
+    void save(const std::string& filename) {
+        std::ofstream output(filename, std::ios::binary);
+
+        if (!output.is_open()) throw std::runtime_error("could not open file for saving");
+
+
+        output.write(reinterpret_cast<char *> (&W1.rows), 4);
+        output.write(reinterpret_cast<char *> (&W1.cols), 4);
+        output.write(reinterpret_cast<char *> (W1.data.data()), W1.data.size() * sizeof(float));
+
+        output.write(reinterpret_cast<char *> (&W2.rows), 4);
+        output.write(reinterpret_cast<char *> (&W2.cols), 4);
+        output.write(reinterpret_cast<char *> (W2.data.data()), W2.data.size() * sizeof(float));
+
+        output.write(reinterpret_cast<char *> (&b1.rows), 4);
+        output.write(reinterpret_cast<char *> (&b1.cols), 4);
+        output.write(reinterpret_cast<char *> (b1.data.data()), b1.data.size() * sizeof(float));
+
+        output.write(reinterpret_cast<char *> (&b2.rows), 4);
+        output.write(reinterpret_cast<char *> (&b2.cols), 4);
+        output.write(reinterpret_cast<char *> (b2.data.data()), b2.data.size() * sizeof(float));
+
+    }
+
+    void load(const std::string& filename) {
+
+        std::ifstream input(filename, std::ios::binary);
+        if (!input.is_open()) throw std::runtime_error("could not open file for loading");
+
+        input.read(reinterpret_cast<char *> (&W1.rows), 4);
+        input.read(reinterpret_cast<char *> (&W1.cols), 4);
+        W1.data.resize(W1.rows * W1.cols);
+        input.read(reinterpret_cast<char *> (W1.data.data()), W1.data.size() * sizeof(float));
+
+        input.read(reinterpret_cast<char *> (&W2.rows), 4);
+        input.read(reinterpret_cast<char *> (&W2.cols), 4);
+        W2.data.resize(W2.rows * W2.cols);
+        input.read(reinterpret_cast<char *> (W2.data.data()), W2.data.size() * sizeof(float));
+
+        input.read(reinterpret_cast<char *> (&b1.rows), 4);
+        input.read(reinterpret_cast<char *> (&b1.cols), 4);
+        b1.data.resize(b1.rows * b1.cols);
+        input.read(reinterpret_cast<char *> (b1.data.data()), b1.data.size() * sizeof(float));
+
+        input.read(reinterpret_cast<char *> (&b2.rows), 4);
+        input.read(reinterpret_cast<char *> (&b2.cols), 4);
+        b2.data.resize(b2.rows * b2.cols);
+        input.read(reinterpret_cast<char *> (b2.data.data()), b2.data.size() * sizeof(float));
+        
+    }
+    
+    
 
 
 };
@@ -377,63 +431,93 @@ Matrix read_mnist_images(const std::string& full_path) {
     
 }
 
+void print_image(const Matrix& data, int index) {
+    std::cout << "image index: " << index << std::endl;
+
+    for (int i = 0; i < 28; i++) {
+        for (int j = 0; j < 28; j++) {
+            float pixel = data(index, i * 28 + j);
+            if (pixel > 0.8) std::cout << "@";
+            else if (pixel > 0.5) std::cout << ".";
+            else std::cout << " ";
+        }
+        std::cout << std::endl;
+    }
+}
+
+
+
 int main() {
-    Matrix train_images = read_mnist_images("train-images-idx3-ubyte");
-    std::vector<int> train_labels = read_mnist_labels("train-labels-idx1-ubyte");
+
+    std::srand(std::time(0));
 
     Matrix test_images = read_mnist_images("t10k-images-idx3-ubyte");
     std::vector<int> test_labels = read_mnist_labels("t10k-labels-idx1-ubyte");
 
-
+    std::string filename = "model.bin";
     NeuralNetwork nn(784, 128, 10);
 
-    int epochs = 20;
+    try {
+        nn.load(filename);
+        std::cout << "model loaded successfully" << std::endl;
+    } catch (const std::runtime_error& e) {
+        std::cout << "no saved model found, training from scratch..." << std::endl;
 
-    int batch_size = 64;
-
-    int num_samples = train_images.rows;
-    int num_batches = (num_samples + batch_size - 1) / batch_size;
-
-    for (int epoch = 0; epoch < epochs; epoch++) {
-
-        for (int batch = 0; batch < num_batches; batch++) {
-
-            int start = batch * batch_size;
-            int end = std::min(start + batch_size, num_samples);
-            int current_batch_size = end - start;
-
-            Matrix X_batch (current_batch_size, 784);
-
-            for (int i = 0; i < current_batch_size; i++) {
-                for (int j = 0; j < 784; j++) {
-                    X_batch(i, j) = train_images(start + i, j);
+        Matrix train_images = read_mnist_images("train-images-idx3-ubyte");
+        std::vector<int> train_labels = read_mnist_labels("train-labels-idx1-ubyte");
+    
+        int epochs = 20;
+        int batch_size = 64;
+        int num_samples = train_images.rows;
+        int num_batches = (num_samples + batch_size - 1) / batch_size;
+        
+        for (int epoch = 0; epoch < epochs; epoch++) {
+            for (int batch = 0; batch < num_batches; batch++) {
+                int start = batch * batch_size;
+                int end = std::min(start + batch_size, num_samples);
+                int current_batch_size = end - start;
+                
+                Matrix X_batch (current_batch_size, 784);
+                for (int i = 0; i < current_batch_size; i++) {
+                    for (int j = 0; j < 784; j++) {
+                        X_batch(i, j) = train_images(start + i, j);
+                    }
                 }
+                
+                std::vector<int> Y_batch;
+                Y_batch.reserve(current_batch_size);
+                for (int i = start; i < end; i++) {
+                    Y_batch.push_back(train_labels[i]);
+                }
+                
+                Matrix X_batch_T = X_batch.T();
+                auto cache = nn.forward(X_batch_T);
+                nn.backward(X_batch_T, Y_batch, cache);
             }
-
-            std::vector<int> Y_batch;
-            Y_batch.reserve(current_batch_size);
-
-            for (int i = start; i < end; i++) {
-                Y_batch.push_back(train_labels[i]);
-            }
-
-            Matrix X_batch_T = X_batch.T();
-            auto cache =  nn.forward(X_batch_T);
-            nn.backward(X_batch_T, Y_batch, cache);
-
+            
+            auto cache = nn.forward(test_images.T());
+            auto predictions = get_predictions(cache.A2);
+            float acc = get_accuracy(predictions, test_labels);
+            std::cout << "Epoch " << epoch << " accuracy: " << acc << std::endl;
         }
-
-        auto cache = nn.forward(test_images.T());
-        auto predictions = get_predictions(cache.A2);
-        float acc = get_accuracy(predictions, test_labels);
-
-        std::cout << "Epoch " <<  epoch << " accuracy: " << acc << std::endl;
-
+        
+        nn.save(filename);
     }
 
-
-
-
+    std::cout << "\n--- verification ---\n";
+    for (int i = 0; i < 5; i++) {
+        int random = rand() % test_images.rows;
+        print_image(test_images, random);
+        Matrix input = Matrix(1, 784);
+        for (int j = 0; j < 784; j++) {
+            input(0, j) = test_images(random, j);
+        }
+        auto cache = nn.forward(input.T());
+        auto prediction = get_predictions(cache.A2);
+        
+        std::cout << "Predicted: " << prediction[0] 
+                << " Actual: " << test_labels[random] << std::endl;
+    }
     return 0;
 }
 
