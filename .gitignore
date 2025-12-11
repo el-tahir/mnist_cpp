@@ -1,0 +1,6 @@
+mnist_cpp
+
+model.bin
+*.o
+*.obj
+*.exe
