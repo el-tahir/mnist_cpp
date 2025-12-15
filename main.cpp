@@ -10,7 +10,6 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <chrono>
-#include <immintrin.h>
 
 #include "Matrix.h"
 #include "NeuralNetwork.h"

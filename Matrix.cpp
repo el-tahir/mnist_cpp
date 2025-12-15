@@ -1,6 +1,12 @@
 #include "Matrix.h"
 #include <cstdlib>
-#include <immintrin.h>
+
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
+    #define USE_AVX 1
+    #include <immintrin.h>
+#else
+    #define USE_AVX 0
+#endif
 
 Matrix::Matrix(int r, int c): rows(r), cols(c) {
     data.resize(rows * cols, 0.0f);
@@ -33,30 +39,40 @@ Matrix Matrix::dot(const Matrix& other) const {
         throw std::invalid_argument("Shape mismatch");
     }
     Matrix result(this->rows, other.cols);
-    for (int i = 0; i < this->rows; i++) { // cows of matrix A
-        for (int k = 0; k < this->cols; k++) { // rows of matrix B
-            
-            float a_val = (*this)(i, k);
+    if (USE_AVX) {
+        for (int i = 0; i < this->rows; i++) { 
+            for (int k = 0; k < this->cols; k++) {
+                
+                float a_val = (*this)(i, k);
 
-            __m256 vec_a = _mm256_set1_ps(a_val); // [a, a, a, a, a, a, a, a]
-            
-            int j = 0;
+                __m256 vec_a = _mm256_set1_ps(a_val); // [a, a, a, a, a, a, a, a]
+                
+                int j = 0;
 
-            for (; j <= other.cols - 8; j += 8) {
-                __m256 vec_c = _mm256_loadu_ps(&result.data[i * other.cols + j]);
-                __m256 vec_b = _mm256_loadu_ps(&other.data[k * other.cols + j]);
+                for (; j <= other.cols - 8; j += 8) {
+                    __m256 vec_c = _mm256_loadu_ps(&result.data[i * other.cols + j]);
+                    __m256 vec_b = _mm256_loadu_ps(&other.data[k * other.cols + j]);
 
-                __m256 vec_prod = _mm256_mul_ps(vec_a, vec_b);
-                vec_c = _mm256_add_ps(vec_c, vec_prod);
-                _mm256_storeu_ps(&result.data[i * other.cols + j], vec_c);
+                    __m256 vec_prod = _mm256_mul_ps(vec_a, vec_b);
+                    vec_c = _mm256_add_ps(vec_c, vec_prod);
+                    _mm256_storeu_ps(&result.data[i * other.cols + j], vec_c);
 
+                }
+
+                for (; j < other.cols; j++) {
+                    result(i, j) += a_val * other(k, j);
+                }
+
+            }   
+        }
+    }
+
+    else {
+        for (size_t i = 0; i < rows; i++) {
+            for (size_t j = 0; j < cols; j++) {
+                result(j, i) = (*this)(i, j);
             }
-
-            for (; j < other.cols; j++) {
-                result(i, j) += a_val * other(k, j);
-            }
-
-        }   
+        } 
     }
     return result;
 }
@@ -64,8 +80,8 @@ Matrix Matrix::dot(const Matrix& other) const {
 Matrix Matrix::T() const {
     Matrix result(cols, rows);
 
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
+    for (size_t i = 0; i < rows; i++) {
+        for (size_t j = 0; j < cols; j++) {
             result(j, i) = (*this)(i, j);
         }
     }
