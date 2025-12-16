@@ -71,9 +71,12 @@ Matrix Matrix::dot(const Matrix& other) const {
     
 
     #else 
-        for (size_t i = 0; i < rows; i++) {
-            for (size_t j = 0; j < cols; j++) {
-                result(j, i) = (*this)(i, j);
+        for (size_t i = 0; i < this->rows; i++) {
+            for (size_t k = 0; k < this->cols; k++) {
+                float a_val = (*this)(i, k);
+                for (size_t j = 0; j < other.cols; j++) {
+                    result(i, j) += a_val * other(k, j);
+                }
             }
         }
     #endif 
