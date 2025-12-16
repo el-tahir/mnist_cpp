@@ -4,3 +4,4 @@ model.bin
 *.o
 *.obj
 *.exe
+nn

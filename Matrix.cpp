@@ -3,9 +3,11 @@
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
     #define USE_AVX 1
+    #pragma message("AVX support found. Training will be fast")
     #include <immintrin.h>
 #else
     #define USE_AVX 0
+    #pragma message("AVX not found. Training will be slower...")
 #endif
 
 Matrix::Matrix(int r, int c): rows(r), cols(c) {
@@ -39,7 +41,8 @@ Matrix Matrix::dot(const Matrix& other) const {
         throw std::invalid_argument("Shape mismatch");
     }
     Matrix result(this->rows, other.cols);
-    if (USE_AVX) {
+
+    #if USE_AVX
         for (int i = 0; i < this->rows; i++) { 
             for (int k = 0; k < this->cols; k++) {
                 
@@ -65,15 +68,16 @@ Matrix Matrix::dot(const Matrix& other) const {
 
             }   
         }
-    }
+    
 
-    else {
+    #else 
         for (size_t i = 0; i < rows; i++) {
             for (size_t j = 0; j < cols; j++) {
                 result(j, i) = (*this)(i, j);
             }
-        } 
-    }
+        }
+    #endif 
+    
     return result;
 }
 
