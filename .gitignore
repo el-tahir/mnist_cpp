@@ -1,5 +1,8 @@
 mnist_cpp
 
+// doxygen output
+docs/
+
 model.bin
 *.o
 *.obj

@@ -1,3 +1,11 @@
+/**
+ * @file utils.cpp
+ * @brief Implementation of utility functions for MNIST handling.
+ * 
+ * Provides functions for reading MNIST IDX file format, computing
+ * predictions and accuracy, and visualizing digits as ASCII art.
+ */
+
 #include "utils.h"
 #include <fstream>
 #include <algorithm>
@@ -40,6 +48,11 @@ float get_accuracy(const std::vector<int>& predictions, const std::vector<int>& 
 }
 
 
+/**
+ * @brief Converts a 32-bit value from big-endian to little-endian (or vice versa).
+ * @param val The value to convert.
+ * @return The byte-swapped value.
+ */
 constexpr uint32_t swap_endian(uint32_t val) {
     return ((val & 0xFF000000) >> 24) |
         ((val & 0x00FF0000) >> 8) |

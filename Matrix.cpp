@@ -1,3 +1,11 @@
+/**
+ * @file Matrix.cpp
+ * @brief Implementation of Matrix class operations and activation functions.
+ * 
+ * Contains implementations for matrix arithmetic, dot product with optional
+ * AVX optimization, and neural network activation functions (ReLU, softmax).
+ */
+
 #include "Matrix.h"
 #include <cstdlib>
 

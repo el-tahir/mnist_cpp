@@ -1,3 +1,11 @@
+/**
+ * @file NeuralNetwork.cpp
+ * @brief Implementation of the NeuralNetwork class.
+ * 
+ * Contains forward propagation, backpropagation with gradient descent,
+ * and model serialization for a two-layer neural network.
+ */
+
 #include "NeuralNetwork.h"
 #include <fstream>
 #include <iostream>

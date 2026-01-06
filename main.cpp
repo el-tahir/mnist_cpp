@@ -1,3 +1,11 @@
+/**
+ * @file main.cpp
+ * @brief Main entry point for the MNIST neural network application.
+ * 
+ * Loads or trains a neural network model on MNIST data, runs verification,
+ * and starts a TCP server for real-time digit classification.
+ */
+
 #include <iostream>
 #include <vector>
 #include <cstdlib>
@@ -15,7 +23,18 @@
 #include "NeuralNetwork.h"
 #include "utils.h"
 
-
+/**
+ * @brief Starts a TCP server for real-time digit classification.
+ * 
+ * Listens on the specified port and accepts connections from clients.
+ * Each client sends 784 floats representing a 28x28 image, and receives
+ * the predicted digit (0-9) as a response.
+ * 
+ * @param nn Reference to the trained neural network.
+ * @param port TCP port number to listen on.
+ * @throws std::runtime_error If socket creation, binding, or listening fails.
+ * @note This function runs an infinite loop and never returns.
+ */
 void start_server(NeuralNetwork& nn, int port) {
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd == 0) {
@@ -74,8 +93,15 @@ void start_server(NeuralNetwork& nn, int port) {
     }
 }
 
-
-
+/**
+ * @brief Main entry point for the MNIST neural network application.
+ * 
+ * Loads test data, attempts to load a pre-trained model, or trains from
+ * scratch if no model exists. Performs verification on random test images
+ * and then starts the inference server.
+ * 
+ * @return Exit code (0 for success).
+ */
 int main() {
 
     std::srand(std::time(0));

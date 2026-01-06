@@ -1,0 +1,61 @@
+# Doxyfile 1.9.1
+# Configuration for MNIST Neural Network C++ Project
+
+#---------------------------------------------------------------------------
+# Project Options
+#---------------------------------------------------------------------------
+PROJECT_NAME           = "MNIST Neural Network in C++"
+PROJECT_BRIEF          = "A simple two-layer neural network for handwritten digit classification"
+PROJECT_NUMBER         = "1.0"
+
+#---------------------------------------------------------------------------
+# Input Options
+#---------------------------------------------------------------------------
+INPUT                  = .
+FILE_PATTERNS          = *.h *.cpp
+RECURSIVE              = NO
+EXCLUDE                = 
+
+#---------------------------------------------------------------------------
+# Output Options
+#---------------------------------------------------------------------------
+OUTPUT_DIRECTORY       = docs
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+HTML_OUTPUT            = html
+
+#---------------------------------------------------------------------------
+# Extraction Options
+#---------------------------------------------------------------------------
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_CLASSES  = YES
+
+#---------------------------------------------------------------------------
+# Source Browser
+#---------------------------------------------------------------------------
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = YES
+
+#---------------------------------------------------------------------------
+# Diagrams
+#---------------------------------------------------------------------------
+HAVE_DOT               = NO
+CLASS_DIAGRAMS         = YES
+
+#---------------------------------------------------------------------------
+# Preprocessing
+#---------------------------------------------------------------------------
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = NO
+
+#---------------------------------------------------------------------------
+# Warnings
+#---------------------------------------------------------------------------
+QUIET                  = NO
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_DOC_ERROR      = YES
